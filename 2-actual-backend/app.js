@@ -42,6 +42,21 @@ app.post('/store-data', async (req, res) => {
   }
 });
 
+// GET route to fetch all data from Firebase Realtime Database
+app.get('/get-all-data', async (req, res) => {
+  try {
+    const snapshot = await get(ref(db));
+    if (snapshot.exists()) {
+      res.status(200).json(snapshot.val());
+    } else {
+      res.status(404).json({ message: 'No data found.' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 // GET route to fetch data from Firebase Realtime Database
 app.get('/get-data/:key', async (req, res) => {
   const key = req.params.key;
