@@ -1,28 +1,33 @@
-const fs = require('node:fs/promises');
+const fs = require('fs');
+const path = require('path');
 
-async function getStoredItems() {
-  try {
-    const rawFileContent = await fs.readFile('items.json', { encoding: 'utf-8' });
-    const data = JSON.parse(rawFileContent);
-    return data.items ?? [];
-  } catch (error) {
-    if (error.code === 'ENOENT') {
-      return []; 
-    }
-    throw new Error('Failed to read items.json: ' + error.message);
-  }
-}
+// Temporary directory in Vercel (use only during function execution)
+const itemsFilePath = path.join('/tmp', 'items.json');
 
-async function storeItems(items) {
-  if (!Array.isArray(items)) {
-    throw new Error('Invalid items: Expected an array');
-  }
-  try {
-    await fs.writeFile('items.json', JSON.stringify({ items }, null, 2));
-  } catch (error) {
-    throw new Error('Failed to write to items.json: ' + error.message);
-  }
-}
+// Function to get stored items from the temporary JSON file
+const getStoredItems = () => {
+  return new Promise((resolve, reject) => {
+    fs.readFile(itemsFilePath, 'utf-8', (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data ? JSON.parse(data) : []);
+      }
+    });
+  });
+};
 
-exports.getStoredItems = getStoredItems;
-exports.storeItems = storeItems;
+// Function to store items in the temporary JSON file
+const storeItems = (items) => {
+  return new Promise((resolve, reject) => {
+    fs.writeFile(itemsFilePath, JSON.stringify(items, null, 2), 'utf-8', (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+};
+
+module.exports = { getStoredItems, storeItems };
